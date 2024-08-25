@@ -1,5 +1,8 @@
 import asyncio
 from mavsdk import System
+from mavsdk.offboard import (PositionNedYaw, OffboardError)
+from math import (sin, cos)
+
 
 
 async def run():
@@ -29,9 +32,76 @@ async def run():
     await drone.action.arm()
 
     print("-- Taking off")
-    await drone.action.takeoff()
+    await drone.offboard.set_position_ned(PositionNedYaw(0.0, 0.0, 0.0, 0.0))
 
-    print(f"-- Reached {heightToReach}m, entering photoTaking mode --")
+    print("-- Starting offboard")
+    try:
+        await drone.offboard.start()
+    except OffboardError as error:
+        print(f"Starting offboard mode failed \
+                with error code: {error._result.result}")
+        print("-- Disarming")
+        await drone.action.disarm()
+        return
+  
+    await drone.offboard.set_position_ned(PositionNedYaw(0,0,heightToReach,0))
+
+    print("-- Moving to Corner of room")
+    #lidar data in form [[Angle, distance], ...]
+
+    lidarData = [[2,5], [4,4], [6,4.5]]
+
+    closestAngle = 0
+    closestDistance = 0
+    async for i in range(len(lidarData)):
+        if(lidarData[i][1] > closestDistance):
+            closestAngle = lidarData[i][0]
+            closestDistance = lidarData[i][1]
+    
+    closestDistance-=1 #1 meter away from wall can change
+    
+    north = cos(closestAngle)*closestDistance
+    east = sin(closestAngle)*closestDistance
+
+    await drone.offboard.setposition_ned(PositionNedYaw(north, east, heightToReach, closestAngle))
+
+    print("-- Reached closest wall --")
+
+    wallToCornerLidarData = [[2,5], [4,4], [6,4.5]] ##test data
+
+    firstAngle = closestAngle+90
+    secondAngle = closestAngle+270
+    firstDistance = 0
+    secondDistance = 0
+
+
+    async for i in range(len(wallToCornerLidarData)):
+        if wallToCornerLidarData[i][1] == firstAngle:
+            firstDistance = wallToCornerLidarData[i][0]
+        elif wallToCornerLidarData[i][1] == secondAngle:
+            secondDistance = wallToCornerLidarData[i][0]
+
+
+    if firstDistance>secondDistance:
+        angle=firstAngle
+        distance = firstDistance
+    else:
+        angle=secondAngle
+        distance = secondDistance
+    
+    north = north + (distance*cos(angle))
+    east = east + (distance*cos(angle))
+
+    await drone.offboard.set_position_ned(PositionNedYaw(north,east,heightToReach,angle))
+
+
+    
+
+
+
+    print(f"-- Reached {heightToReach}m and corner, entering photoTaking mode --")
+
+
 
     status_text_task.cancel()
 
