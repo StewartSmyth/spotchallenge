@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 # test takeoff logic #
 
@@ -8,12 +9,12 @@ ROOM_X = 5
 ROOM_Y= 5
 ROOM_HEIGHT = 3
 
-INITIAL_LOCATION = [2,3,0.5] # Test initial location [X, Y, Height]
+INITIAL_LOCATION = [1.5,2,0.5] # Test initial location [X, Y, Height]
 
-INITIAL_ORIENTATION = 0 #0 is facing +X, 90 facing +Y, 180 facing -X and 270 facing -Y 
+INITIAL_ORIENTATION = 90 #0 is facing +X, 90 facing +Y, 180 facing -X and 270 facing -Y 
 
 def distance(x,y,angle):
-    cos_angle, sin_angle = np.cos(angle), np.sin(angle)
+    cos_angle, sin_angle = math.cos(angle), math.sin(angle)
     if cos_angle == 0:
         return y if sin_angle < 0 else ROOM_Y - y
     if sin_angle == 0:
@@ -25,17 +26,24 @@ def distance(x,y,angle):
 
 def getTestLidarData(location, initialAngle): #get all 360 degrees
     lidarData = [] #[distance, angle]
-    for i in range(360):
+    for i in range(initialAngle, initialAngle+360):
         angle = i*(np.pi/180)
         print(f"Angle: {angle}")
-        print(f"Distance:{distance(INITIAL_LOCATION[0], INITIAL_LOCATION[1], INITIAL_LOCATION[2])}")
-        lidarData.append([distance(INITIAL_LOCATION[0], INITIAL_LOCATION[1], INITIAL_LOCATION[2]),angle])
-    
-
-        
-        
+        print(f"Distance:{distance(location[0], location[1], angle)}")
+        lidarData.append([distance(location[0], location[1], angle),angle-initialAngle*(np.pi/180)]) # subtract initialAngle to get relative angle in comparison to initial orientation 
+    return lidarData
 
 
-getTestLidarData(INITIAL_LOCATION, INITIAL_ORIENTATION)
+def getLowestDistance(lidarData): # type: ignore
+    lowestDistance = 10000000
+    angle = 0
+    for i in lidarData:
+        if i[0] < lowestDistance:
+            lowestDistance = i[0]
+            angle = i[1]
+    return [lowestDistance, angle]
 
 
+
+
+print(getLowestDistance(getTestLidarData(INITIAL_LOCATION, INITIAL_ORIENTATION)))

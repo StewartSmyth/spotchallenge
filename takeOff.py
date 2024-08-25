@@ -3,12 +3,14 @@ from mavsdk import System
 from mavsdk.offboard import (PositionNedYaw, OffboardError)
 from math import (sin, cos)
 
-
+SPOT_HEIGHT = 0.5 #spot is 0.5m tall when lying down
 
 async def run():
 
-    heightToReach = int(input("Height to reach on takeoff in meters: "))
 
+    heightToReach = int(input("Height to reach on takeoff in meters: ")) - SPOT_HEIGHT
+
+    
     drone = System()
     await drone.connect(system_address="udp://:14540")
 
@@ -94,14 +96,7 @@ async def run():
 
     await drone.offboard.set_position_ned(PositionNedYaw(north,east,heightToReach,angle))
 
-
-    
-
-
-
     print(f"-- Reached {heightToReach}m and corner, entering photoTaking mode --")
-
-
 
     status_text_task.cancel()
 
