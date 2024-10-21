@@ -16,10 +16,10 @@ ROOM_X = 10
 ROOM_Y= 12
 ROOM_HEIGHT = 3
 
-ROOM_RADIUS = 5
+ROOM_RADIUS = 10
 
 
-INITIAL_LOCATION = [1.5, 3.3, 0.5] # Test initial location [X, Y, Height]
+INITIAL_LOCATION = [5, 5, 0.5] # Test initial location [X, Y, Height]
 
 INITIAL_ORIENTATION = 0 #0 is facing +X, 90 facing +Y, 180 facing -X and 270 facing -Y 
 
